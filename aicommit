@@ -90,6 +90,7 @@ function show_help {
   echo "  --prefix                      Specify type of commit i.e.{fix,feat,refactor,"
   echo "                                ticket number} to overide auto type           "
   echo "                                                                 default: auto"
+  echo "  -V, --version                 Show version information                      "
   echo "  --max_tokens                  Controls the maximum number of tokens to      "
   echo "                                generate in the text completion task.         "
   echo "                                                                 default: 100 "
@@ -99,6 +100,12 @@ function show_help {
   echo "                                environment variable.  default: <system local>"
   echo ""                                                  
   echo ""
+}
+
+# function to display version information
+function show_version {
+  aicommit_version="v1.0.1"
+  echo "aicommit $aicommit_version"
 }
 
 function handle_options {
@@ -117,6 +124,10 @@ function handle_options {
           exit 1
         fi
         ;;
+      V ) # Show version information
+        show_version
+        exit 0
+        ;;
       - ) # Long option
         case "${OPTARG}" in
           help )
@@ -134,6 +145,10 @@ function handle_options {
             ;;
           language=*)
             LANG=${OPTARG#*=}
+            ;;
+          version )
+            show_version
+            exit 0
             ;;     
           *)
             echo "Error: Invalid option --${OPTARG}"
