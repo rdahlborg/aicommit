@@ -15,13 +15,14 @@ AI Commit is a command-line tool that automates the process of generating commit
 - `-d, --debug`: Debug.
 - `--language`: Language for generated commit messages. Overrides the value of the system local `LANG` environment variable. Default: `<system local>`.
 
-## Installation
+## Linux / MacOS Set-up
 
 1. Clone the repository: `git clone https://github.com/username/aicommit.git`
 2. Navigate to the directory: `cd aicommit`
 3. Make the script executable: `chmod +x aicommit`
-4. Add a PATH to your .bashrc or .bash_profile file: `echo "export PATH=\$PATH:$(pwd)" >>~/.bash_profile`
-5. Refresh your shell environment: `source ~/.bash_profile`
-6. Run the script: `./aicommit --help`
+4. Add a PATH to your .bashrc or .bash_profile file: `echo "export PATH=\$PATH:$(pwd)" >> ~/.zshrc`
+5. Run the following command in your terminal, replacing yourkey with your [API key](https://platform.openai.com/account/api-keys) `echo "export OPENAI_API_KEY='yourkey'" >> ~/.zshrc`
+6. Refresh your shell environment: `source ~/.zshrc`
+7. Run the script: `./aicommit --help`
  
 Congratulations, you've successfully installed AI Commit! You can now run the aicommit command from anywhere in your terminal.

@@ -21,8 +21,8 @@
 
 
 # OpenAI API key
-OPENAI_API_KEY=""
-source ./.openai.key
+#OPENAI_API_KEY=""
+#source ./.openai.key
 
 
 # Shows the differences between the current state of the repository (i.e., the changes you've made since the last commit) 
