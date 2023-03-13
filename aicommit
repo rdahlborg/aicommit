@@ -157,6 +157,15 @@ function handle_options {
   shift $((OPTIND -1))
 }
 
+function check_config {
+  if [ -z "$OPENAI_API_KEY" ]; then
+    echo "Please configure your \$OPENAI_API_KEY and try again"
+    exit 1
+    fi
+}
+
+# Check config
+check_config
 
 # Parse the command-line arguments
 handle_options "$@"
