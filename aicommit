@@ -22,6 +22,8 @@
 
 # OpenAI API key
 OPENAI_API_KEY=""
+source ./.openai.key
+
 
 # Shows the differences between the current state of the repository (i.e., the changes you've made since the last commit) 
 # and the state of the repository before those changes were made.
@@ -49,7 +51,7 @@ AIPROMPT="Return a commit message in format: <type>: (<scope>): <subject> using 
 
 function getCommitMessage {
   # Encode the special character using an escape sequence
-ENCODED_AIPROMPT=$(echo -n ${AIPROMPT} in the language  ${LANG}  for the following diff: \n ${DIFF} | jq -sRr @json)
+ENCODED_AIPROMPT=$(echo -n ${AIPROMPT} in the language  ${LANG} for the following diff: \n ${DIFF} | jq -sRr @json)
 
 JSON_DATA=$(cat <<-END
 {

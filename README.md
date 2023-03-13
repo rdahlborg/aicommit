@@ -13,15 +13,15 @@ AI Commit is a command-line tool that automates the process of generating commit
 - `--prefix`: Specify the type of commit (i.e. fix, feat, refactor, ticket number) to override the auto type. Default: auto.
 - `--max_tokens`: Controls the maximum number of tokens to generate in the text completion task. Default: 100.
 - `-d, --debug`: Debug.
-- `--language`: Language for generated commit messages. Overrides the value of the system local `LANG` environment variable. Default: <system local>.
+- `--language`: Language for generated commit messages. Overrides the value of the system local `LANG` environment variable. Default: `<system local>`.
 
 ## Installation
 
 1. Clone the repository: `git clone https://github.com/username/aicommit.git`
 2. Navigate to the directory: `cd aicommit`
 3. Make the script executable: `chmod +x aicommit`
-4. Add the following line to your .bashrc or .bash_profile file: `export PATH="$HOME/.local/bin:$PATH"`
-5. Refresh your shell environment: `source ~/.bashrc`
+4. Add a PATH to your .bashrc or .bash_profile file: `echo "export PATH=\$PATH:$(pwd)" >>~/.bash_profile`
+5. Refresh your shell environment: `source ~/.bash_profile`
 6. Run the script: `./aicommit --help`
  
 Congratulations, you've successfully installed AI Commit! You can now run the aicommit command from anywhere in your terminal.
