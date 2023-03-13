@@ -1,0 +1,188 @@
+#!/bin/bash
+
+###################################################################################
+# Script: aicommit                                                                #
+#                                                                                 #
+# Description:                                                                    #
+# This script automates the process of generating commit messages based on        #
+# changes made to a Git repository using OpenAI's language models. It uses the    #
+# Git diff command to get the changes, sends them to the OpenAI API, and receives #
+# a commit message suggestion in response. The script then amends the most recent #
+# Git commit with the generated commit message. This can save time and effort     #
+# when committing changes to a Git repository, as it removes the need to manually #
+# write commit messages for each change.                                          #
+#                                                                                 #
+#                                                                                 #
+# Author: Robert Dahlborg, https://www.linkedin.com/in/robertdahlborg/            #
+#                                                                                 #
+# Date: March 13, 2023                                                            #
+#                                                                                 #
+###################################################################################
+
+
+# OpenAI API key
+OPENAI_API_KEY=""
+
+# Shows the differences between the current state of the repository (i.e., the changes you've made since the last commit) 
+# and the state of the repository before those changes were made.
+# DIFF=$(git diff HEAD~1 HEAD)
+
+# This will show the differences between the last commit and your changes, with added words in green and deleted words in red.
+# DIFF=$(git diff --color-words HEAD)
+
+# Shows the changes between the current state of your working directory and the last commit in the current branch.
+DIFF=$(git diff HEAD)
+
+# Model, see https://platform.openai.com/docs/models/overview for options
+MODEL=gpt-3.5-turbo
+
+# Max length of the response
+MAX_TOKENS=100
+
+# What sampling temperature to use, between 0 and 2. Higher values like 0.8 will 
+# make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+TEMPERATURE=0.2
+
+# Use OpenAI to generate a commit message based on the changes
+AIPROMPT="Return a commit message in format: <type>: (<scope>): <subject> using imperative mood " 
+
+
+function getCommitMessage {
+  # Encode the special character using an escape sequence
+ENCODED_AIPROMPT=$(echo -n ${AIPROMPT} in the language  ${LANG}  for the following diff: \n ${DIFF} | jq -sRr @json)
+
+JSON_DATA=$(cat <<-END
+{
+  "model": "$MODEL",
+  "max_tokens": $MAX_TOKENS,
+  "temperature": $TEMPERATURE,
+  "messages": [
+    {
+      "role": "user",
+      "content": $ENCODED_AIPROMPT
+    }
+  ]
+}
+END
+)
+  RESPONSE=$(curl -s -X POST \
+      -H "Authorization: Bearer $OPENAI_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d "$JSON_DATA" \
+      https://api.openai.com/v1/chat/completions)
+  COMMIT_MESSAGE=$(echo "$RESPONSE" | jq -r '.choices[].message.content')
+  echo "$COMMIT_MESSAGE"
+  return 0
+}
+
+# function to display help message
+function show_help {
+  echo "Usage: aicommit COMMAND [-h] [--prefix PREFIX]                                "
+  echo ""
+  echo "Commands:                                                                     "
+  echo "  aicommit                      Show the commit message and exit              "
+  echo "  aicommit commit               Commit using an ai generated commit message   "
+  echo "                                                                  [aliases: c]"
+  echo "Options:                                                                      "
+  echo "  -h, --help                    Show this help message and exit               "
+  echo "  --prefix                      Specify type of commit i.e.{fix,feat,refactor,"
+  echo "                                ticket number} to overide auto type           "
+  echo "                                                                 default: auto"
+  echo "  --max_tokens                  Controls the maximum number of tokens to      "
+  echo "                                generate in the text completion task.         "
+  echo "                                                                 default: 100 "
+  echo "  -d, --debug                   Debug                                         "
+  echo "  --language                    Language for generated commit messages.       "
+  echo "                                Overrides the value of the system local LANG  "
+  echo "                                environment variable.  default: <system local>"
+  echo ""                                                  
+  echo ""
+}
+
+function handle_options {
+  while getopts ":hdm :-:" opt; do
+    case ${opt} in
+      h ) # Display help message and exit
+        show_help
+        exit 0
+        ;;
+      d ) # Debug
+        if [[ "${OPTARG}" == "" ]]; then
+          set -x
+        else
+          echo "Error: Option -d does not take an argument"
+          show_help
+          exit 1
+        fi
+        ;;
+      - ) # Long option
+        case "${OPTARG}" in
+          help )
+            show_help
+            exit 0
+            ;;
+          prefix=*)
+            prefix=${OPTARG#*=}
+            ;;
+          max_tokens=*)
+            MAX_TOKENS=${OPTARG#*=}
+            ;;
+          debug )
+            set -x
+            ;;
+          language=*)
+            LANG=${OPTARG#*=}
+            ;;     
+          *)
+            echo "Error: Invalid option --${OPTARG}"
+            show_help
+            exit 1
+            ;;
+        esac
+        ;;
+      \? ) # Invalid option
+        echo "Error: Invalid option -$OPTARG"
+        show_help
+        exit 1
+        ;;
+      : ) # Missing argument
+        echo "Error: Option -$OPTARG requires an argument"
+        show_help
+        exit 1
+        ;;
+    esac
+  done
+  shift $((OPTIND -1))
+}
+
+
+# Parse the command-line arguments
+handle_options "$@"
+
+# Get commit message
+COMMIT_MESSAGE=$(getCommitMessage)
+
+# Handle the command
+case $1 in
+  commit)
+    if [ -z "$prefix" ]; then
+      echo $COMMIT_MESSAGE
+      git commit -m "$COMMIT_MESSAGE"
+      exit 0
+    fi
+    COMMIT_MESSAGE=${prefix}": ""${COMMIT_MESSAGE#*:}"
+    echo $COMMIT_MESSAGE
+    git commit -m "$COMMIT_MESSAGE"
+    exit 0
+    ;;
+  *)
+    if [ -z "$prefix" ]; then
+      echo $COMMIT_MESSAGE
+      exit 0
+    fi
+    COMMIT_MESSAGE=${prefix}": ""${COMMIT_MESSAGE#*:}"
+    echo $COMMIT_MESSAGE
+    echo 
+    exit 0
+    ;;
+esac
