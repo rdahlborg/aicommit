@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 ###################################################################################
 # Script: aicommit                                                                #
@@ -29,14 +29,17 @@
 # and the state of the repository before those changes were made.
 # DIFF=$(git diff HEAD~1 HEAD)
 
-# This will show the differences between the last commit and your changes, with added words in green and deleted words in red.
-# DIFF=$(git diff --color-words HEAD)
-
 # Shows the changes between the current state of your working directory and the last commit in the current branch.
-DIFF=$(git diff HEAD)
+# DIFF=$(git diff HEAD)
+
+# Show a summary for added and copied files
+# --diff-filter, A: Added files, C: Copied files, D: Deleted files, M: Modified files, R: Renamed files, T: Type (i.e., file mode) changed files, U: Unmerged files, X: Unknown files, B: Pairing Broken (broken due to pair renames)
+# The characters are case sensitive. So for example, using --diff-filter=A will show only added files, while --diff-filter=a will exclude added files from the results.
+DIFF=$(git diff HEAD --diff-filter=MRT | sed 's/"/\\"/g' && git diff --stat HEAD --diff-filter=ACD | sed 's/"/\\"/g')
 
 # Model, see https://platform.openai.com/docs/models/overview for options
 MODEL=gpt-3.5-turbo
+
 
 # Max length of the response
 MAX_TOKENS=100
@@ -72,7 +75,7 @@ END
       -H "Content-Type: application/json" \
       -d "$JSON_DATA" \
       https://api.openai.com/v1/chat/completions)
-  COMMIT_MESSAGE=$(echo "$RESPONSE" | jq -r '.choices[].message.content')
+  COMMIT_MESSAGE=$(echo "$RESPONSE"  | jq -r '.choices[].message.content')
   echo "$COMMIT_MESSAGE"
   return 0
 }
