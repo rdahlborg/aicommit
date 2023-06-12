@@ -49,7 +49,7 @@ MAX_TOKENS=100
 TEMPERATURE=0.2
 
 # Use OpenAI to generate a commit message based on the changes
-AIPROMPT="Return a commit message in format: <type>: (<scope>): <subject> using imperative mood and newline charachters " 
+AIPROMPT="Return a commit message in format: <type>: (<scope>): <subject> using imperative mood and newline characters " 
 
 
 function getCommitMessage {
@@ -75,8 +75,8 @@ END
       -H "Content-Type: application/json" \
       -d "$JSON_DATA" \
       https://api.openai.com/v1/chat/completions)
-  echo $RESPONSE
-  COMMIT_MESSAGE=$(echo "$RESPONSE" | tr -dcd '\11\12\15\40-\176' | jq -r '.choices[].message.content')
+  # echo $RESPONSE
+  COMMIT_MESSAGE=$(echo "$RESPONSE" | jq -r '.choices[].message.content')
   echo "$COMMIT_MESSAGE"
   return 0
 }
