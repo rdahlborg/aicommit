@@ -207,7 +207,7 @@ COMMIT_MESSAGE=$(getCommitMessage)
 
 # Handle the command
 case $1 in
-  commit)
+  commit|c)
     if [ -z "$prefix" ]; then
       echo $COMMIT_MESSAGE
       git commit -e -m "$COMMIT_MESSAGE"
