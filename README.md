@@ -12,7 +12,7 @@ AI Commit is a command-line tool that automates the process of generating commit
 - `--prefix`: Specify the type of commit (i.e. fix, feat, refactor, ticket number) to override the auto type. Default: auto.
 - `--max_tokens`: Controls the maximum number of tokens to generate in the text completion task. Default: 100.
 - `-p, --prompt`: Shows the prompt.                              "
-- `-r, --response`: Shows the response from OpenAI.                "
+- `-r, --response`: Shows the response from OpenAI in json format.                "
 - `-d, --debug`: Debug.
 - `--language`: Language for generated commit messages. Overrides the value of the system local `LANG` environment variable. Default: `<system local>`.
 
