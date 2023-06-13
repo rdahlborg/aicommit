@@ -22,20 +22,16 @@
 
 # OpenAI API key
 #OPENAI_API_KEY=""
-#source ./.openai.key
+if [[ -f ./.openai.key ]]; then
+  source ./.openai.key
+fi
 
-
-# Shows the differences between the current state of the repository (i.e., the changes you've made since the last commit) 
-# and the state of the repository before those changes were made.
-# DIFF=$(git diff HEAD~1 HEAD)
-
-# Shows the changes between the current state of your working directory and the last commit in the current branch.
-# DIFF=$(git diff HEAD)
 
 # Show a summary for added and copied files
 # --diff-filter, A: Added files, C: Copied files, D: Deleted files, M: Modified files, R: Renamed files, T: Type (i.e., file mode) changed files, U: Unmerged files, X: Unknown files, B: Pairing Broken (broken due to pair renames)
 # The characters are case sensitive. So for example, using --diff-filter=A will show only added files, while --diff-filter=a will exclude added files from the results.
-DIFF=$(git diff HEAD --diff-filter=MRT | sed 's/"/\\"/g' && git diff --stat HEAD --diff-filter=ACD | sed 's/"/\\"/g')
+#DIFF=$(git diff HEAD --diff-filter=MRT | sed 's/"/\\"/g' && git diff --stat HEAD --diff-filter=ACD | sed 's/"/\\"/g')
+DIFF=$(git diff HEAD --diff-filter=MRT  && git diff --stat HEAD --diff-filter=ACD )
 
 # Model, see https://platform.openai.com/docs/models/overview for options
 MODEL=gpt-3.5-turbo
@@ -51,16 +47,22 @@ TEMPERATURE=0.2
 # Use OpenAI to generate a commit message based on the changes
 AIPROMPT="Return a commit message in format: <type>: (<scope>): <subject> using imperative mood and newline characters " 
 
+# The -e or --edit option in the git commit command allows you to modify the commit message before creating the commit.
+EDIT="-e"
 
-function getCommitMessage {
-  # Encode the special character using an escape sequence
+# Encode the special character using an escape sequence
 ENCODED_AIPROMPT=$(echo -n ${AIPROMPT} in the language ${LANG} for the following diff: \n ${DIFF} | jq -sRr @json)
 
+function getCommitMessage {
+if [[ "$SHOW_PROMPT" == "true" ]]; then
+  echo "$ENCODED_AIPROMPT" >&2 
+fi
 JSON_DATA=$(cat <<-END
 {
   "model": "$MODEL",
   "max_tokens": $MAX_TOKENS,
   "temperature": $TEMPERATURE,
+  "stop": "\n",
   "messages": [
     {
       "role": "user",
@@ -75,8 +77,11 @@ END
       -H "Content-Type: application/json" \
       -d "$JSON_DATA" \
       https://api.openai.com/v1/chat/completions)
-  # echo $RESPONSE
-  COMMIT_MESSAGE=$(echo "$RESPONSE" | jq -r '.choices[].message.content')
+  
+  if [[ "$SHOW_RESPONSE" == "true" ]]; then
+  echo "$RESPONSE" >&2
+fi
+  COMMIT_MESSAGE=$(echo -n "$RESPONSE" | jq -r '.choices[0].message.content')
   echo "$COMMIT_MESSAGE"
   return 0
 }
@@ -97,6 +102,8 @@ function show_help {
   echo "  --max_tokens                  Controls the maximum number of tokens to      "
   echo "                                generate in the text completion task.         "
   echo "                                                                 default: 100 "
+  echo "  -p, --prompt                  Shows the prompt                              "
+  echo "  -r, --response                Shows the response from OpenAI                "
   echo "  -d, --debug                   Debug                                         "
   echo "  --language                    Language for generated commit messages.       "
   echo "                                Overrides the value of the system local LANG  "
@@ -106,7 +113,7 @@ function show_help {
 }
 
 function handle_options {
-  while getopts ":hdm :-:" opt; do
+  while getopts ":hdmpr :-:" opt; do
     case ${opt} in
       h ) # Display help message and exit
         show_help
@@ -117,6 +124,24 @@ function handle_options {
           set -x
         else
           echo "Error: Option -d does not take an argument"
+          show_help
+          exit 1
+        fi
+        ;;
+      p ) # Show Prompt
+        if [[ "${OPTARG}" == "" ]]; then
+          SHOW_PROMPT=true
+        else
+          echo "Error: Option -p does not take an argument"
+          show_help
+          exit 1
+        fi
+        ;;
+      r ) # Show Prompt
+        if [[ "${OPTARG}" == "" ]]; then
+          SHOW_RESPONSE=true
+        else
+          echo "Error: Option -p does not take an argument"
           show_help
           exit 1
         fi
@@ -136,6 +161,12 @@ function handle_options {
           debug )
             set -x
             ;;
+          prompt )
+          SHOW_PROMPT=true
+          ;;
+          response )
+          SHOW_RESPONSE=true
+          ;;          
           language=*)
             LANG=${OPTARG#*=}
             ;;     
@@ -182,12 +213,12 @@ case $1 in
   commit)
     if [ -z "$prefix" ]; then
       echo $COMMIT_MESSAGE
-      git commit -m "$COMMIT_MESSAGE"
+      git commit -e -m "$COMMIT_MESSAGE"
       exit 0
     fi
     COMMIT_MESSAGE=${prefix}": ""${COMMIT_MESSAGE#*:}"
     echo $COMMIT_MESSAGE
-    git commit -m "$COMMIT_MESSAGE"
+    git commit -e -m "$COMMIT_MESSAGE"
     exit 0
     ;;
   *)
