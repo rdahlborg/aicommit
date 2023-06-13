@@ -1,6 +1,6 @@
 # AI Commit
-bre
-
+Description
+AI Commit is a command-line tool that automates the process of generating commit messages based on changes made to a Git repository using OpenAI's language models. It uses the Git diff command to get the changes, sends them to the OpenAI API, and receives a commit message suggestion in response. The script then amends the most recent Git commit with the generated commit message. This can save time and effort when committing changes to a Git repository, as it removes the need to manually write commit messages for each change.
 ### Commands
 
 - `aicommit`: Show the commit message and exit.
@@ -11,6 +11,8 @@ bre
 - `-h, --help`: Show this help message and exit.
 - `--prefix`: Specify the type of commit (i.e. fix, feat, refactor, ticket number) to override the auto type. Default: auto.
 - `--max_tokens`: Controls the maximum number of tokens to generate in the text completion task. Default: 100.
+- `-p, --prompt`: Shows the prompt.                              "
+- `-r, --response`: Shows the response from OpenAI.                "
 - `-d, --debug`: Debug.
 - `--language`: Language for generated commit messages. Overrides the value of the system local `LANG` environment variable. Default: `<system local>`.
 

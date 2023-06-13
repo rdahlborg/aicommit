@@ -45,10 +45,7 @@ MAX_TOKENS=100
 TEMPERATURE=0.2
 
 # Use OpenAI to generate a commit message based on the changes
-AIPROMPT="Return a commit message in format: <type>: (<scope>): <subject> using imperative mood and newline characters " 
-
-# The -e or --edit option in the git commit command allows you to modify the commit message before creating the commit.
-EDIT="-e"
+AIPROMPT="Return a commit message in format: <type>: (<scope>): <subject> using imperative mood " 
 
 # Encode the special character using an escape sequence
 ENCODED_AIPROMPT=$(echo -n ${AIPROMPT} in the language ${LANG} for the following diff: \n ${DIFF} | jq -sRr @json)
